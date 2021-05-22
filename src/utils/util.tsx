@@ -89,7 +89,7 @@ export default class Util {
       const columnObj: any = {};
       columnObj[`${value}`] = column.name;
       values.push(columnObj);
-      return;
+      return column;
     })
     return values;
   }

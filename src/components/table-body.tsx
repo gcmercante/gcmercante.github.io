@@ -205,7 +205,11 @@ export default function TableTest() {
                                     case 'status':
                                       return(<CustomTableCell key={ prop + index + client.id }>{ client.status }</CustomTableCell>);
                                 }
-                              }                    
+                              }
+                              return(
+                                <>
+                                </>
+                              );                
                           })
                         }
                     <TableCell />
