@@ -1,16 +1,17 @@
 import React, { MouseEvent, useState } from 'react';
+
 import { TableCell, TableRow, IconButton, Menu, ListItem, ListSubheader, ListItemSecondaryAction, ListItemText, Checkbox, Divider } from '@material-ui/core';
 import { lightBlue, grey } from '@material-ui/core/colors';
 import { MoreVertRounded } from '@material-ui/icons';
 import { withStyles, Theme, createStyles } from '@material-ui/core/styles';
-import Util from '../utils/util';
 
-import './table-head.css';
+import Util, { Column } from '../utils/util';
 
 const utilFunctions = new Util();
 
-interface TableHeadTestProps {
-
+interface Props {
+    onNotCheckedChange(value: string[]): void,
+    onQuantityChange(value: number): void
 }
 
 const CustomCheckbox = withStyles((theme: Theme) => (
@@ -80,8 +81,8 @@ const CustomTableRow = withStyles(() => (
     })
 ))(TableRow)
 
-export default function TableHeadTest(props: TableHeadTestProps) {
-    const [lineQuantity, setLineQuantity] = useState(13);
+export default function TableHeadTest({ onQuantityChange, onNotCheckedChange }: Props) {
+    const [lineQuantity, setLineQuantity] = useState(50);
     const [checkValue, setCheckValue] = useState(['default']);
 
     const [colspan, setColspan] = useState(1);
@@ -98,10 +99,9 @@ export default function TableHeadTest(props: TableHeadTestProps) {
         "status"
     ]);
     
-    const column: any[] = utilFunctions.getColumns();
-    const header: string[] = utilFunctions.getHeader();
+    const column: Column[] = utilFunctions.getColumns();
 
-    const checkedColumns: string[] = [...header];
+    const checkedColumns: string[] = utilFunctions.getColumnValues();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -124,9 +124,11 @@ export default function TableHeadTest(props: TableHeadTestProps) {
         if (value === 'default' && newChecked.find(element => element === 'fifty')) {
             newChecked.splice(newChecked.indexOf('fifty'), 1);
             setLineQuantity(50);
+            onQuantityChange(lineQuantity);
         } else if(value === 'fifty' && newChecked.find(element => element === 'default')) {
             newChecked.splice(newChecked.indexOf('default'), 1);
             setLineQuantity(13);
+            onQuantityChange(lineQuantity);
         }
 
         setCheckValue(newChecked);
@@ -134,7 +136,7 @@ export default function TableHeadTest(props: TableHeadTestProps) {
 
     const handleColumnChecked = (option: any) => () => {
         const currentIndex = columnsCheck.indexOf(option.value);
-        const notCheckedIndex = notChecked.indexOf(option.name);
+        const notCheckedIndex = notChecked.indexOf(option.value);
         const newChecked = [...columnsCheck];
         const newNotChecked = [...notChecked];
         
@@ -143,13 +145,14 @@ export default function TableHeadTest(props: TableHeadTestProps) {
             newChecked.push(option.value);
             setColspan(colspan - 1);
         } else {
-            newNotChecked.push(option.name);
+            newNotChecked.push(option.value);
             newChecked.splice(currentIndex, 1);
             setColspan(colspan + 1);
         }
 
 
         setNotChecked(newNotChecked);
+        onNotCheckedChange(newNotChecked);
         setColumnsCheck(newChecked);
     }
     const handleClose = () => {
@@ -160,25 +163,26 @@ export default function TableHeadTest(props: TableHeadTestProps) {
     return (
         <CustomTableRow>
             {
-                checkedColumns.map((cell: string) => {
-                    if (!notChecked.find(column => column === cell)) {
-                        const split = cell.split(' ')[0];
-                        if(split === 'Qtd.' || split === '%') {
+                checkedColumns.map((columnObj: any) => {
+                    return Object.entries(columnObj).map(([columnKey, columnValue]: [string, any]) => {
+                        if (!notChecked.find((column: string) => column === columnKey)) {
+                            const split = columnValue.split(' ')[0];
+                            if(split === 'Qtd.' || split === '%') {
+                                return (
+                                    <CenteredTableCell>
+                                        {columnValue}
+                                    </CenteredTableCell>
+                                )
+                            }                            
                             return (
-                                <CenteredTableCell>
-                                    {cell}
-                                </CenteredTableCell>
+                                <CustomTableCell>
+                                    {columnValue}
+                                </CustomTableCell>
                             )
                         }
-                        
-                        return (
-                            <CustomTableCell>
-                                {cell}
-                            </CustomTableCell>
-                        )
-                    }
-                    return(<></>);
-                })
+                        return(<></>);
+                    })
+                })                    
             }
             <TableCell align="right" colSpan={colspan}>
                 <CustomIconButton
